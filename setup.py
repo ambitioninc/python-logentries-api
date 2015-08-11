@@ -16,16 +16,25 @@ def get_version():
     else:
         raise RuntimeError('Unable to find version string in {0}.'.format(VERSION_FILE))
 
+requirements = [
+    'requests>=2.7.0',
+    'six>=1.9.0',
+]
+
+import sys
+if sys.version_info.major < 3:
+    requirements.append('enum34>=1.0.4')
+
 
 setup(
     name='python-logentries-api',
     version=get_version(),
-    description='',
+    description='A python wrapper for the Logentries API',
     long_description=open('README.rst').read(),
     url='https://github.com/ambitioninc/python-logentries-api',
     author='Micah Hausler',
     author_email='opensource@ambition.com',
-    keywords='',
+    keywords='logs, logentries',
     packages=find_packages(),
     classifiers=[
         'Programming Language :: Python :: 2.7',
@@ -36,7 +45,7 @@ setup(
         'Operating System :: OS Independent',
     ],
     license='MIT',
-    install_requires=[],
+    install_requires=requirements,
     include_package_data=True,
     test_suite='nose.collector',
     tests_require=[

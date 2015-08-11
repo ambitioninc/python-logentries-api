@@ -5,7 +5,7 @@ Table of Contents
    :maxdepth: 2
 
    index
-   installation
    ref/logentries_api
+   ref/alerts
    contributing
    release_notes

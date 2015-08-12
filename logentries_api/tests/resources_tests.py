@@ -15,7 +15,7 @@ class ColorTests(TestCase):
 
     def test_random_color(self):
         some_color = random_color()
-        self.assertRegex(some_color, r'[A-F0-9]{6}')
+        self.assertRegexpMatches(some_color, r'[A-F0-9]{6}')
 
 
 class LabelsTests(TestCase):

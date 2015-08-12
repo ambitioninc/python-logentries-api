@@ -1,8 +1,8 @@
 .. image:: https://travis-ci.org/ambitioninc/python-logentries-api.png
    :target: https://travis-ci.org/ambitioninc/python-logentries-api
 
-.. image:: https://coveralls.io/repos/ambitioninc/python-logentries-api/badge.png?branch=develop
-    :target: https://coveralls.io/r/ambitioninc/python-logentries-api?branch=develop
+.. image:: https://coveralls.io/repos/ambitioninc/python-logentries-api/badge.png?branch=master
+    :target: https://coveralls.io/r/ambitioninc/python-logentries-api?branch=master
 
 python-logentries-api
 =====================

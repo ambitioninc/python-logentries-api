@@ -22,7 +22,7 @@ requirements = [
 ]
 
 import sys
-if sys.version_info.major < 3:
+if int(str(sys.version_info.major) + str(sys.version_info.minor)) < 34:
     requirements.append('enum34>=1.0.4')
 
 

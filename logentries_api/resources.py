@@ -122,6 +122,23 @@ class Labels(Resource):
             uri=ApiUri.TAGS.value,
         ).get('tags')
 
+    def delete(self, id):
+        """
+        Delete the specified label
+
+        :param id: the label's ID
+        :type id: str
+
+        :raises: This will raise a
+            :class:`ServerException<logentries_api.exceptions.ServerException>`
+            if there is an error from Logentries
+        """
+        return self._post(
+            request=ApiActions.DELETE.value,
+            uri=ApiUri.TAGS.value,
+            params={'id': id}
+        )
+
 
 class Tags(Resource):
     """
@@ -186,6 +203,23 @@ class Tags(Resource):
             )
         )
 
+    def delete(self, id):
+        """
+        Delete the specified tag
+
+        :param id: the tag's ID
+        :type id: str
+
+        :raises: This will raise a
+            :class:`ServerException<logentries_api.exceptions.ServerException>`
+            if there is an error from Logentries
+        """
+        return self._post(
+            request=ApiActions.DELETE.value,
+            uri=ApiUri.ACTIONS.value,
+            params={'id': id}
+        )
+
 
 class Hooks(Resource):
     """
@@ -193,7 +227,7 @@ class Hooks(Resource):
 
     Hooks assign tags based on matching regexes to appropriate logs
     """
-    def create(self, name, regexes, tag_id, logs=None):
+    def create(self, name, regexes, tag_ids, logs=None):
         """
         Create a hook
 
@@ -205,9 +239,9 @@ class Hooks(Resource):
             user-agent is curl.
         :type regexes: list of str
 
-        :param tag_id: The id of the tag to associate the hook with.
+        :param tag_id: The ids of the tags to associate the hook with.
             (The 'id' key of the create tag response)
-        :type tag_id: str
+        :type tag_id: list of str
 
         :param logs: The logs to add the hook to. Comes from the 'key'
             key in the log dict.
@@ -225,9 +259,7 @@ class Hooks(Resource):
             'triggers': regexes,
             'sources': logs or [],
             'groups': [],
-            'actions': [
-                tag_id
-            ],
+            'actions': tag_ids
         }
         return self._post(
             request=ApiActions.CREATE.value,
@@ -287,6 +319,23 @@ class Hooks(Resource):
                 params=data
             )
 
+    def delete(self, id):
+        """
+        Delete the specified hook
+
+        :param id: the hook's ID
+        :type id: str
+
+        :raises: This will raise a
+            :class:`ServerException<logentries_api.exceptions.ServerException>`
+            if there is an error from Logentries
+        """
+        return self._post(
+            request=ApiActions.DELETE.value,
+            uri=ApiUri.HOOKS.value,
+            params={'id': id}
+        )
+
 
 class Alerts(Resource):
     """
@@ -313,4 +362,70 @@ class Alerts(Resource):
                     uri=ApiUri.ACTIONS.value,
                 ).get('actions')
             )
+        )
+
+    def create(self,
+               alert_config,
+               alert_frequency_count=None,
+               alert_frequency_unit=None):
+        """
+        Create a new alert
+
+        :param alert_config: A list of AlertConfig classes (Ex:
+            [``EmailAlert('me@mydomain.com')``])
+        :type alert_config: list of
+            :class:`PagerDutyAlert<logentries_api.alerts.PagerDutyAlert>`,
+            :class:`WebHookAlert<logentries_api.alerts.WebHookAlert>`,
+            :class:`EmailAlert<logentries_api.alerts.EmailAlert>`,
+            :class:`SlackAlert<logentries_api.alerts.SlackAlert>`, or
+            :class:`HipChatAlert<logentries_api.alerts.HipChatAlert>`
+
+        :param alert_frequency_count: How many times per
+            ``alert_frequency_unit`` to issue an alert. Defaults to 1
+        :type alert_frequency_count: int
+
+        :param alert_frequency_unit: How often to regulate sending alerts.
+            Must be 'day', or 'hour'. Defaults to 'hour'
+        :type alert_frequency_unit: str
+
+        :returns: The response of your post
+        :rtype: dict
+
+        :raises: This will raise a
+            :class:`ServerException<logentries_api.exceptions.ServerException>`
+            if there is an error from Logentries
+        """
+        data = {
+            'rate_count': 0,
+            'rate_range': 'day',
+            'limit_count': alert_frequency_count or 1,
+            'limit_range': alert_frequency_unit or 'hour',
+            'schedule': [],
+            'enabled': True,
+        }
+        data.update(alert_config.args())
+
+        # Yes, it's confusing. the `/actions/` endpoint is used for alerts, while
+        # the /tags/ endpoint is used for labels.
+        return self._post(
+            request=ApiActions.CREATE.value,
+            uri=ApiUri.ACTIONS.value,
+            params=data
+        )
+
+    def delete(self, id):
+        """
+        Delete the specified alert
+
+        :param id: the alert's ID
+        :type id: str
+
+        :raises: This will raise a
+            :class:`ServerException<logentries_api.exceptions.ServerException>`
+            if there is an error from Logentries
+        """
+        return self._post(
+            request=ApiActions.DELETE.value,
+            uri=ApiUri.ACTIONS.value,
+            params={'id': id}
         )

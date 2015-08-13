@@ -6,6 +6,7 @@ from logentries_api.resources import (
     random_color,
     Labels, Tags, Hooks, Alerts
 )
+from logentries_api.alerts import WebHookAlert
 
 
 class ColorTests(TestCase):
@@ -56,6 +57,18 @@ class LabelsTests(TestCase):
             uri='tags',
         )
 
+    @patch.object(Labels, '_post')
+    def test_delete(self, mock_post):
+        """
+        Test .delete()
+        """
+        self.label.delete('006d95a8-4fac-42c4-90ed-c3c34978de3e')
+        mock_post.assert_called_once_with(
+            request='delete',
+            uri='tags',
+            params={'id': '006d95a8-4fac-42c4-90ed-c3c34978de3e'}
+        )
+
 
 class TagsTests(TestCase):
     """
@@ -100,6 +113,18 @@ class TagsTests(TestCase):
             uri='actions',
         )
 
+    @patch.object(Tags, '_post')
+    def test_delete(self, mock_post):
+        """
+        Test .delete()
+        """
+        self.tags.delete('006d95a8-4fac-42c4-90ed-c3c34978de3e')
+        mock_post.assert_called_once_with(
+            request='delete',
+            uri='actions',
+            params={'id': '006d95a8-4fac-42c4-90ed-c3c34978de3e'}
+        )
+
 
 class HooksTests(TestCase):
     """
@@ -126,7 +151,7 @@ class HooksTests(TestCase):
         self.hooks.create(
             'newhook',
             regexes=['hostname = /*.example.com/'],
-            tag_id='ce5eb877-a0ea-4a0a-ac38-7b7e83a1c307',
+            tag_ids=['ce5eb877-a0ea-4a0a-ac38-7b7e83a1c307'],
             logs=['0a4cb373-0ab5-4934-ab99-b6236c7324ff']
         )
         mock_post.assert_called_once_with(
@@ -152,6 +177,18 @@ class HooksTests(TestCase):
         mock_post.assert_called_once_with(
             request='list',
             uri='hooks',
+        )
+
+    @patch.object(Hooks, '_post')
+    def test_delete(self, mock_post):
+        """
+        Test .delete()
+        """
+        self.hooks.delete('006d95a8-4fac-42c4-90ed-c3c34978de3e')
+        mock_post.assert_called_once_with(
+            request='delete',
+            uri='hooks',
+            params={'id': '006d95a8-4fac-42c4-90ed-c3c34978de3e'}
         )
 
     @patch.object(Hooks, '_post')
@@ -199,6 +236,31 @@ class AlertsTests(TestCase):
         self.alerts = Alerts('123')
 
     @patch.object(Alerts, '_post')
+    def test_create(self, mock_post):
+        """
+        Test .create()
+        """
+        alert_config = WebHookAlert(url='https://www.google.com')
+
+        self.alerts.create(alert_config)
+        mock_post.assert_called_once_with(
+            request='create',
+            uri='actions',
+            params={
+                'rate_count': 0,
+                'rate_range': 'day',
+                'limit_count': 1,
+                'limit_range': 'hour',
+                'schedule': [],
+                'enabled': True,
+                'type': 'webhook',
+                'args': {
+                    'url': 'https://www.google.com'
+                }
+            }
+        )
+
+    @patch.object(Alerts, '_post')
     def test_list(self, mock_post):
         """
         Test .list()
@@ -207,4 +269,16 @@ class AlertsTests(TestCase):
         mock_post.assert_called_once_with(
             request='list',
             uri='actions',
+        )
+
+    @patch.object(Alerts, '_post')
+    def test_delete(self, mock_post):
+        """
+        Test .delete()
+        """
+        self.alerts.delete('006d95a8-4fac-42c4-90ed-c3c34978de3e')
+        mock_post.assert_called_once_with(
+            request='delete',
+            uri='actions',
+            params={'id': '006d95a8-4fac-42c4-90ed-c3c34978de3e'}
         )

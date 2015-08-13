@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+v0.3
+----
+
+* Updated log api to https
+
 v0.2
 ----
 

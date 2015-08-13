@@ -372,7 +372,7 @@ class Alerts(Resource):
         Create a new alert
 
         :param alert_config: A list of AlertConfig classes (Ex:
-            [``EmailAlert('me@mydomain.com')``])
+            ``[EmailAlert('me@mydomain.com')]``)
         :type alert_config: list of
             :class:`PagerDutyAlert<logentries_api.alerts.PagerDutyAlert>`,
             :class:`WebHookAlert<logentries_api.alerts.WebHookAlert>`,

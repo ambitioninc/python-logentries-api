@@ -10,7 +10,7 @@ class LogSets(Resource):
 
     @property
     def base_url(self):
-        return 'http://api.logentries.com/{}/hosts/'.format(self.account_key)
+        return 'https://api.logentries.com/{}/hosts/'.format(self.account_key)
 
     def list(self):
         """

@@ -3,7 +3,7 @@ from unittest import TestCase
 from mock import patch
 
 from logentries_api.resources import (
-    random_color,
+    random_color, dict_is_subset,
     Labels, Tags, Hooks, Alerts
 )
 from logentries_api.alerts import WebHookAlert
@@ -17,6 +17,27 @@ class ColorTests(TestCase):
     def test_random_color(self):
         some_color = random_color()
         self.assertRegexpMatches(some_color, r'[A-F0-9]{6}')
+
+
+class SupportTests(TestCase):
+    """
+    Tests for other functions
+    """
+
+    def test_dict_is_subset_true(self):
+        d1 = {'a': 'a'}
+        d2 = {'a': 'a', 'b': 'b'}
+
+        self.assertTrue(dict_is_subset({}, d1))
+        self.assertTrue(dict_is_subset(d1, d2))
+
+    def test_dict_is_subset_false(self):
+
+        d1 = {'a': 'a'}
+        d2 = {'a': 'a', 'b': 'b'}
+
+        self.assertFalse(dict_is_subset(d1, {}))
+        self.assertFalse(dict_is_subset(d2, d1))
 
 
 class LabelsTests(TestCase):
@@ -55,6 +76,73 @@ class LabelsTests(TestCase):
         mock_post.assert_called_once_with(
             request='list',
             uri='tags',
+        )
+
+    @patch.object(Labels, 'list')
+    def test_get(self, mock_list):
+        """
+        Test .get()
+        """
+        mock_list.return_value = [
+            {
+                'name': 'abcd'
+            }, {
+                'name': 'label1'
+            }
+        ]
+        response = self.label.get('label1')
+
+        self.assertEqual(
+            response,
+            [{'name': 'label1'}]
+        )
+
+    @patch.object(Labels, 'list')
+    def test_get_none(self, mock_list):
+        """
+        Test .get() with no matches
+        """
+        mock_list.return_value = [
+            {
+                'name': 'abcd'
+            }, {
+                'name': 'label1'
+            }
+        ]
+        response = self.label.get('other')
+
+        self.assertEqual(response, [])
+
+    @patch.object(Labels, '_post')
+    def test_update(self, mock_post):
+        """
+        Test .update()
+        """
+        label = {
+            'should not get through': 'nope',
+            'id': 'd9d4596e-49e4-4135-b3b3-847f9e7c1f43',
+            'name': 'My Sandbox',
+            'description': 'My Sandbox',
+            'title': 'My Sandbox',
+            'appearance': {
+                'color': '888888'
+            },
+        }
+
+        self.label.update(label)
+
+        mock_post.assert_called_once_with(
+            request='update',
+            uri='tags',
+            params={
+                'id': 'd9d4596e-49e4-4135-b3b3-847f9e7c1f43',
+                'name': 'My Sandbox',
+                'description': 'My Sandbox',
+                'title': 'My Sandbox',
+                'appearance': {
+                    'color': '888888'
+                },
+            }
         )
 
     @patch.object(Labels, '_post')
@@ -112,6 +200,41 @@ class TagsTests(TestCase):
             request='list',
             uri='actions',
         )
+
+    @patch.object(Tags, 'list')
+    def test_get(self, mock_list):
+        """
+        Test .get()
+        """
+        mock_list.return_value = [
+            {
+                'args': {'sn': '1111'}
+            }, {
+                'args': {'sn': '2222'}
+            }
+        ]
+        response = self.tags.get('1111')
+
+        self.assertEqual(
+            response,
+            [{'args': {'sn': '1111'}}]
+        )
+
+    @patch.object(Tags, 'list')
+    def test_get_none(self, mock_list):
+        """
+        Test .get() with no matches
+        """
+        mock_list.return_value = [
+            {
+                'args': {'sn': '1111'}
+            }, {
+                'args': {'sn': '2222'}
+            }
+        ]
+        response = self.tags.get('3333')
+
+        self.assertEqual(response, [])
 
     @patch.object(Tags, '_post')
     def test_delete(self, mock_post):
@@ -179,6 +302,89 @@ class HooksTests(TestCase):
             uri='hooks',
         )
 
+    @patch.object(Hooks, 'list')
+    def test_get(self, mock_list):
+        """
+        Test .get()
+        """
+        mock_list.return_value = [
+            {
+                'name': 'abcd',
+                'actions': [],
+            }, {
+                'name': 'hook1',
+                'actions': [],
+            }
+        ]
+        response = self.hooks.get('hook1')
+
+        self.assertEqual(
+            response,
+            [{'name': 'hook1', 'actions': []}]
+        )
+
+    @patch.object(Hooks, 'list')
+    def test_get_none(self, mock_list):
+        """
+        Test .get() with no matches
+        """
+        mock_list.return_value = [
+            {
+                'name': 'abcd',
+                'actions': [],
+            }, {
+                'name': 'hook1',
+                'actions': [],
+            }
+        ]
+        response = self.hooks.get('hook2')
+
+        self.assertEqual(response, [])
+
+    @patch.object(Hooks, '_post')
+    def test_update(self, mock_post):
+        """
+        Test .update()
+        """
+        hook = {
+            'should not get through': 'nope',
+            'id': 'd9d4596e-49e4-4135-b3b3-847f9e7c1f43',
+            'name': 'My Sandbox',
+            'triggers': [
+                'host = you.example.com'
+            ],
+            'sources': [
+                '4d42c719-4005-4929-aa4a-994da4b95040'
+            ],
+            'groups': [],
+            'actions': [
+                '9f6adf69-37b9-4a4b-88fb-c3fc4c781a11',
+                'ddc36d71-33cb-4f4f-be1b-8591814b1946'
+            ],
+        }
+
+        self.hooks.update(hook)
+
+        mock_post.assert_called_once_with(
+            request='update',
+            uri='hooks',
+            params={
+                'id': 'd9d4596e-49e4-4135-b3b3-847f9e7c1f43',
+                'name': 'My Sandbox',
+                'triggers': [
+                    'host = you.example.com'
+                ],
+                'sources': [
+                    '4d42c719-4005-4929-aa4a-994da4b95040'
+                ],
+                'groups': [],
+                'actions': [
+                    '9f6adf69-37b9-4a4b-88fb-c3fc4c781a11',
+                    'ddc36d71-33cb-4f4f-be1b-8591814b1946'
+                ],
+            }
+        )
+
     @patch.object(Hooks, '_post')
     def test_delete(self, mock_post):
         """
@@ -190,41 +396,6 @@ class HooksTests(TestCase):
             uri='hooks',
             params={'id': '006d95a8-4fac-42c4-90ed-c3c34978de3e'}
         )
-
-    @patch.object(Hooks, '_post')
-    def test_add_hook_to_log(self, mock_post):
-        """
-        Test .add_hook_to_log()
-        """
-        self.hooks.add_hook_to_log(
-            hook=self.hook_dict,
-            log_key='f5059c57-9425-4668-8552-99626e635e93'
-        )
-
-        sources = self.hook_dict.get('sources')
-        sources.append('f5059c57-9425-4668-8552-99626e635e93')
-        self.hook_dict['sources'] = sources
-
-        mock_post.assert_called_once_with(
-            request='update',
-            uri='hooks',
-            params=self.hook_dict
-        )
-
-    @patch.object(Hooks, '_post')
-    def test_add_hook_to_log_already_exists(self, mock_post):
-        """
-        Test .add_hook_to_log()
-        """
-        sources = self.hook_dict.get('sources')
-        sources.append('f5059c57-9425-4668-8552-99626e635e93')
-        self.hook_dict['sources'] = sources
-
-        self.hooks.add_hook_to_log(
-            hook=self.hook_dict,
-            log_key='f5059c57-9425-4668-8552-99626e635e93'
-        )
-        self.assertFalse(mock_post.called)
 
 
 class AlertsTests(TestCase):
@@ -247,8 +418,8 @@ class AlertsTests(TestCase):
             request='create',
             uri='actions',
             params={
-                'rate_count': 0,
-                'rate_range': 'day',
+                'rate_count': 1,
+                'rate_range': 'hour',
                 'limit_count': 1,
                 'limit_range': 'hour',
                 'schedule': [],
@@ -269,6 +440,114 @@ class AlertsTests(TestCase):
         mock_post.assert_called_once_with(
             request='list',
             uri='actions',
+        )
+
+    @patch.object(Alerts, 'list')
+    def test_get_no_args(self, mock_list):
+        """
+        Test .get() without alert_args
+        """
+        mock_list.return_value = [
+            {
+                'type': 'slack',
+                'args': {'url': 'https://hooks.slack.com/services/111'}
+            }, {
+                'type': 'slack',
+                'args': {'url': 'https://hooks.slack.com/services/222'}
+            }, {
+                'type': 'mailto',
+                'args': {'direct': 'you@example.com'}
+            }
+        ]
+        response = self.alerts.get('slack')
+
+        self.assertEqual(
+            response,
+            [{
+                'type': 'slack',
+                'args': {'url': 'https://hooks.slack.com/services/111'}
+            }, {
+                'type': 'slack',
+                'args': {'url': 'https://hooks.slack.com/services/222'}
+            }]
+        )
+
+    @patch.object(Alerts, 'list')
+    def test_get_with_args(self, mock_list):
+        """
+        Test .get() with alert_args
+        """
+        mock_list.return_value = [
+            {
+                'type': 'slack',
+                'args': {'url': 'https://hooks.slack.com/services/111'}
+            }, {
+                'type': 'slack',
+                'args': {'url': 'https://hooks.slack.com/services/222'}
+            }, {
+                'type': 'mailto',
+                'args': {'direct': 'you@example.com'}
+            }
+        ]
+        response = self.alerts.get('slack', {'url': 'https://hooks.slack.com/services/111'})
+
+        self.assertEqual(
+            response,
+            [{
+                'type': 'slack',
+                'args': {'url': 'https://hooks.slack.com/services/111'}
+            }]
+        )
+
+    @patch.object(Alerts, 'list')
+    def test_get_none(self, mock_list):
+        """
+        Test .get() with no matches
+        """
+        mock_list.return_value = [
+            {
+                'type': 'mailto',
+                'args': {'direct': 'you@example.com'}
+            }
+        ]
+        response = self.alerts.get('slack')
+
+        self.assertEqual(response, [])
+
+    @patch.object(Alerts, '_post')
+    def test_update(self, mock_post):
+        """
+        Test .update()
+        """
+        label = {
+            'should not get through': 'nope',
+            'id': 'd9d4596e-49e4-4135-b3b3-847f9e7c1f43',
+            'args': {'direct': 'you@example.com'},
+            'rate_count': 1,
+            'rate_range': 'hour',
+            'limit_count': 1,
+            'limit_range': 'hour',
+            'schedule': [],
+            'enabled': True,
+            'type': 'mailto',
+        }
+
+        self.alerts.update(label)
+
+        mock_post.assert_called_once_with(
+            request='update',
+            uri='actions',
+            params={
+                'id': 'd9d4596e-49e4-4135-b3b3-847f9e7c1f43',
+                'args': {'direct': 'you@example.com'},
+                'rate_count': 1,
+                'rate_range': 'hour',
+                'limit_count': 1,
+                'limit_range': 'hour',
+                'schedule': [],
+                'enabled': True,
+                'type': 'mailto'
+            }
         )
 
     @patch.object(Alerts, '_post')

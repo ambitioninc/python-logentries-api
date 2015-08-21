@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v0.4
+----
+
+* Added ``.get()`` and ``.update()``  methods to resources
+* Modified ``publish.py`` script to upload wheel that is built from sdist
+
 v0.3
 ----
 

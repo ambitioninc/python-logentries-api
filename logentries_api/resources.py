@@ -485,13 +485,13 @@ class Alerts(Resource):
         Create a new alert
 
         :param alert_config: A list of AlertConfig classes (Ex:
-            ``[EmailAlert('me@mydomain.com')]``)
+            ``[EmailAlertConfig('me@mydomain.com')]``)
         :type alert_config: list of
-            :class:`PagerDutyAlert<logentries_api.alerts.PagerDutyAlert>`,
-            :class:`WebHookAlert<logentries_api.alerts.WebHookAlert>`,
-            :class:`EmailAlert<logentries_api.alerts.EmailAlert>`,
-            :class:`SlackAlert<logentries_api.alerts.SlackAlert>`, or
-            :class:`HipChatAlert<logentries_api.alerts.HipChatAlert>`
+            :class:`PagerDutyAlertConfig<logentries_api.alerts.PagerDutyAlertConfig>`,
+            :class:`WebHookAlertConfig<logentries_api.alerts.WebHookAlertConfig>`,
+            :class:`EmailAlertConfig<logentries_api.alerts.EmailAlertConfig>`,
+            :class:`SlackAlertConfig<logentries_api.alerts.SlackAlertConfig>`, or
+            :class:`HipChatAlertConfig<logentries_api.alerts.HipChatAlertConfig>`
 
         :param occurrence_frequency_count: How many times per
             ``alert_frequency_unit`` for a match before issuing an alert.

@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v0.5
+----
+
+* Changed names of AlertConfig classes
+* Added ``AnomalyAlert`` and ``InactivityAlert``
+
 v0.4
 ----
 

@@ -9,6 +9,12 @@ python-logentries-api
 This is a Python wrapper for the Logentries API. The API object terms follow
 the semantics from the Logentries website, not the Logentries API.
 
+The `InactivityAlert`_ and `AnomalyAlert`_ classes simulate a user login to
+create the appropriate alerts.
+
+.. _AnomalyAlert: http://python-logentries-api.readthedocs.org/en/latest/ref/special_alerts.html#anomalyalert
+.. _InactivityAlert: http://python-logentries-api.readthedocs.org/en/latest/ref/special_alerts.html#inactivityalert
+
 This is not endorsed or provided by Logentries, and no commercial support is
 provided.
 

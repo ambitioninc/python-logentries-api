@@ -1,13 +1,13 @@
 from unittest import TestCase
 
 from logentries_api.alerts import (
-    PagerDutyAlert, WebHookAlert,
-    EmailAlert, SlackAlert,
-    HipChatAlert
+    PagerDutyAlertConfig, WebHookAlertConfig,
+    EmailAlertConfig, SlackAlertConfig,
+    HipChatAlertConfig
 )
 
 
-class AlertsTests(TestCase):
+class AlertConfigsTests(TestCase):
     """
     Test each alert type
     """
@@ -16,7 +16,7 @@ class AlertsTests(TestCase):
         Test PagerDuty schema
         """
         service_key = 'bb7aad43abd9401a9e4f065c9e5ab89f'
-        alert = PagerDutyAlert(description='testing', service_key=service_key)
+        alert = PagerDutyAlertConfig(description='testing', service_key=service_key)
 
         self.assertDictEqual(
             alert.args(),
@@ -33,7 +33,7 @@ class AlertsTests(TestCase):
         """
         Test Email alert
         """
-        alert = EmailAlert(address='me@example.com')
+        alert = EmailAlertConfig(address='me@example.com')
         self.assertDictEqual(
             alert.args(),
             {
@@ -50,7 +50,7 @@ class AlertsTests(TestCase):
         """
         Test WebHook schema
         """
-        alert = WebHookAlert(url='https://www.google.com')
+        alert = WebHookAlertConfig(url='https://www.google.com')
 
         self.assertDictEqual(
             alert.args(),
@@ -66,7 +66,7 @@ class AlertsTests(TestCase):
         """
         Test Slack schema
         """
-        alert = SlackAlert(url='https://www.google.com')
+        alert = SlackAlertConfig(url='https://www.google.com')
 
         self.assertDictEqual(
             alert.args(),
@@ -83,7 +83,7 @@ class AlertsTests(TestCase):
         Test HipChat schema
         """
         token = 'bb7aad43abd9401a9e4f065c9e5ab89f'
-        alert = HipChatAlert(token=token, room_name='group')
+        alert = HipChatAlertConfig(token=token, room_name='group')
 
         self.assertDictEqual(
             alert.args(),

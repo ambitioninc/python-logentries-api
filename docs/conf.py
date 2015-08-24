@@ -55,6 +55,7 @@ pygments_style = 'sphinx'
 
 intersphinx_mapping = {
     'python': ('http://python.readthedocs.org/en/v2.7.2/', None),
+    'requests': ('http://www.python-requests.org/en/latest/', None)
 }
 
 # -- Options for HTML output ----------------------------------------------

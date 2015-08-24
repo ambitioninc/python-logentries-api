@@ -5,37 +5,37 @@ Alert Configs
 
 .. automodule:: logentries_api.alerts
 
-PagerDutyAlert
---------------
-.. autoclass:: logentries_api.alerts.PagerDutyAlert
+PagerDutyAlertConfig
+--------------------
+.. autoclass:: logentries_api.alerts.PagerDutyAlertConfig
     :members:
 
     .. automethod:: __init__
 
-WebHookAlert
-------------
-.. autoclass:: logentries_api.alerts.WebHookAlert
+WebHookAlertConfig
+------------------
+.. autoclass:: logentries_api.alerts.WebHookAlertConfig
     :members:
 
     .. automethod:: __init__
 
-EmailAlert
-----------
-.. autoclass:: logentries_api.alerts.EmailAlert
+EmailAlertConfig
+----------------
+.. autoclass:: logentries_api.alerts.EmailAlertConfig
     :members:
 
     .. automethod:: __init__
 
-SlackAlert
-----------
-.. autoclass:: logentries_api.alerts.SlackAlert
+SlackAlertConfig
+----------------
+.. autoclass:: logentries_api.alerts.SlackAlertConfig
     :members:
 
     .. automethod:: __init__
 
-HipChatAlert
-------------
-.. autoclass:: logentries_api.alerts.HipChatAlert
+HipChatAlertConfig
+------------------
+.. autoclass:: logentries_api.alerts.HipChatAlertConfig
     :members:
 
     .. automethod:: __init__

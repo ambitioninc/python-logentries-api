@@ -73,8 +73,7 @@ Before a new release, please go through the following checklist:
 * Git tag the version
 * Upload to pypi::
 
-    pip install wheel
-    python setup.py sdist bdist_wheel upload
+    python publish.py
 
 Publishing to pypi can be accomplished by running python publish.py
 

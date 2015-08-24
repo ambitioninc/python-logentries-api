@@ -6,7 +6,7 @@ from logentries_api.resources import (
     random_color, dict_is_subset,
     Labels, Tags, Hooks, Alerts
 )
-from logentries_api.alerts import WebHookAlert
+from logentries_api.alerts import WebHookAlertConfig
 
 
 class ColorTests(TestCase):
@@ -411,7 +411,7 @@ class AlertsTests(TestCase):
         """
         Test .create()
         """
-        alert_config = WebHookAlert(url='https://www.google.com')
+        alert_config = WebHookAlertConfig(url='https://www.google.com')
 
         self.alerts.create(alert_config)
         mock_post.assert_called_once_with(

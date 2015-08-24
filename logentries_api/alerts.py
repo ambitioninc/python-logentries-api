@@ -38,15 +38,15 @@ class AlertConfig(six.with_metaclass(ABCMeta, object)):
         raise NotImplementedError
 
 
-class PagerDutyAlert(AlertConfig):
+class PagerDutyAlertConfig(AlertConfig):
     """
-    A PagerDuty Alert configuration
+    A PagerDuty AlertConfig configuration
     """
     def __init__(self, description, service_key):
         """
         Requires a 'description' and 'service_key' parameter
         """
-        super(PagerDutyAlert, self).__init__(
+        super(PagerDutyAlertConfig, self).__init__(
             description=description,
             service_key=service_key
         )
@@ -64,15 +64,15 @@ class PagerDutyAlert(AlertConfig):
         }
 
 
-class EmailAlert(AlertConfig):
+class EmailAlertConfig(AlertConfig):
     """
-    An email Alert configuration
+    An email AlertConfig configuration
     """
     def __init__(self, address):
         """
         Requires an 'address' parameter
         """
-        super(EmailAlert, self).__init__(address=address)
+        super(EmailAlertConfig, self).__init__(address=address)
 
     def args(self):
         """
@@ -88,7 +88,7 @@ class EmailAlert(AlertConfig):
         }
 
 
-class WebHookAlert(AlertConfig):
+class WebHookAlertConfig(AlertConfig):
     """
     A WebHook Alert configuration
     """
@@ -96,7 +96,7 @@ class WebHookAlert(AlertConfig):
         """
         Requires a 'url' parameter
         """
-        super(WebHookAlert, self).__init__(url=url)
+        super(WebHookAlertConfig, self).__init__(url=url)
 
     def args(self):
         """
@@ -110,7 +110,7 @@ class WebHookAlert(AlertConfig):
         }
 
 
-class SlackAlert(AlertConfig):
+class SlackAlertConfig(AlertConfig):
     """
     An Slack Alert configuration
     """
@@ -118,7 +118,7 @@ class SlackAlert(AlertConfig):
         """
         Requires a 'url' parameter
         """
-        super(SlackAlert, self).__init__(url=url)
+        super(SlackAlertConfig, self).__init__(url=url)
 
     def args(self):
         """
@@ -132,15 +132,15 @@ class SlackAlert(AlertConfig):
         }
 
 
-class HipChatAlert(AlertConfig):
+class HipChatAlertConfig(AlertConfig):
     """
-    An HipChat Alert configuration
+    An HipChat AlertConfig configuration
     """
     def __init__(self, token, room_name):
         """
         Requires a 'url' parameter
         """
-        super(HipChatAlert, self).__init__(
+        super(HipChatAlertConfig, self).__init__(
             token=token,
             room_name=room_name
         )

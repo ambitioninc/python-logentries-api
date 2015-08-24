@@ -51,7 +51,7 @@ setup(
     tests_require=[
         'coverage>=3.7.1',
         'flake8>=2.2.0',
-        'mock>=1.0.1',
+        'mock>=1.3.0',
         'nose>=1.3.0',
     ],
     zip_safe=False,

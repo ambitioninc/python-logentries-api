@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+v0.6
+----
+
+* Added ``.delete()`` to ``AnomalyAlert`` and ``InactivityAlert``
+
 v0.5
 ----
 

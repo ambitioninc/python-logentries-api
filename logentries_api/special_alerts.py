@@ -243,14 +243,13 @@ class SpecialAlertBase(object):
         self.session = session or requests.session()
         self.account_id = self._login(username, password)
 
-    @staticmethod
-    def _get_login_payload(username, password, session):
+    def _get_login_payload(self, username, password):
         """
         returns the payload the login page expects
         :rtype: dict
         """
         payload = {
-            'csrfmiddlewaretoken': session.cookies.get_dict().get('csrftoken'),
+            'csrfmiddlewaretoken': self._get_csrf_token(),
             'ajax': '1',
             'next': '/app/',
             'username': username,
@@ -261,6 +260,37 @@ class SpecialAlertBase(object):
     def _get_csrf_token(self):
         return self.session.cookies.get_dict().get('csrftoken')
 
+    def _get_api_headers(self, **kwargs):
+        headers = copy(self.default_headers)
+        headers.update({
+            'Content-Type': 'application/json;charset=utf-8',
+            'Accept': 'application/json, text/plain, */*',
+            'Referer': 'https://logentries.com/app/{account_id}'.format(account_id=self.account_id),
+            'X-CSRFToken': self._get_csrf_token(),
+        })
+        headers.update(kwargs)
+        return headers
+
+    def _api_post(self, url, **kwargs):
+        """
+        Convenience method for posting
+        """
+        return self.session.post(
+            url=url,
+            headers=self._get_api_headers(),
+            **kwargs
+        )
+
+    def _api_delete(self, url, **kwargs):
+        """
+        Convenience method for deleting
+        """
+        return self.session.delete(
+            url=url,
+            headers=self._get_api_headers(),
+            **kwargs
+        )
+
     def _login(self, username, password):
         """
         ._login() makes three requests:
@@ -269,7 +299,7 @@ class SpecialAlertBase(object):
             * One to /login/ajax/ to get a logged-in session cookie
             * One to /app/ to get the beginning of the account id
 
-        :param username: A valid username
+        :param username: A valid username (email)
         :type username: str
         :param password: A valid password
         :type password: str
@@ -292,8 +322,7 @@ class SpecialAlertBase(object):
             headers=login_headers,
             data=self._get_login_payload(
                 username,
-                password,
-                session=self.session),
+                password),
         )
         if not login_response.ok:
             raise ServerException(login_response.text)
@@ -337,14 +366,6 @@ class InactivityAlert(SpecialAlertBase):
             :class:`ServerException<logentries_api.exceptions.ServerException>`
             if there is an error from Logentries
         """
-        headers = copy(self.default_headers)
-        headers.update({
-            'Content-Type': 'application/json;charset=utf-8',
-            'Accept': 'application/json, text/plain, */*',
-            'Referer': 'https://logentries.com/app/{account_id}'.format(account_id=self.account_id),
-            'X-CSRFToken': self._get_csrf_token(),
-        })
-
         data = {
             'tag': {
                 'actions': [
@@ -365,9 +386,8 @@ class InactivityAlert(SpecialAlertBase):
         }
         data['tag'].update(trigger_config.to_dict())
 
-        response = self.session.post(
+        response = self._api_post(
             url=self.url_template.format(account_id=self.account_id),
-            headers=headers,
             data=json.dumps(data, sort_keys=True)
         )
 
@@ -376,13 +396,39 @@ class InactivityAlert(SpecialAlertBase):
                 '{0}: {1}'.format(response.status_code, response.text or response.reason))
         return response.json()
 
+    def delete(self, tag_id):
+        """
+        Delete the specified InactivityAlert
+
+        :param tag_id: The tag ID to delete
+        :type tag_id: str
+
+        :raises: This will raise a
+            :class:`ServerException <logentries_api.exceptions.ServerException>`
+            if there is an error from Logentries
+        """
+        tag_url = 'https://logentries.com/rest/{account_id}/api/tags/{tag_id}'
+
+        response = self._api_delete(
+            url=tag_url.format(
+                account_id=self.account_id,
+                tag_id=tag_id
+            )
+        )
+        if not response.ok:
+            raise ServerException(
+                '{0}: {1}'.format(
+                    response.status_code,
+                    response.text or response.reason
+                ))
+
 
 class AnomalyAlert(SpecialAlertBase):
     """
     A class for creating AnomalyAlerts
     """
 
-    def _create_scheduled_query(self, query, change, scope_unit, scope_count, headers):
+    def _create_scheduled_query(self, query, change, scope_unit, scope_count):
         """
         Create the scheduled query
         """
@@ -399,9 +445,8 @@ class AnomalyAlert(SpecialAlertBase):
 
         query_url = 'https://logentries.com/rest/{account_id}/api/scheduled_queries'
 
-        query_response = self.session.post(
+        query_response = self._api_post(
             url=query_url.format(account_id=self.account_id),
-            headers=headers,
             data=json.dumps(query_data, sort_keys=True)
         )
 
@@ -472,14 +517,6 @@ class AnomalyAlert(SpecialAlertBase):
 
         """
 
-        headers = copy(self.default_headers)
-        headers.update({
-            'Content-Type': 'application/json;charset=utf-8',
-            'Accept': 'application/json, text/plain, */*',
-            'Referer': 'https://logentries.com/app/{account_id}'.format(account_id=self.account_id),
-            'X-CSRFToken': self._get_csrf_token(),
-        })
-
         change = str(percentage_change)
         if increase_positive:
             change = '+' + change
@@ -491,7 +528,6 @@ class AnomalyAlert(SpecialAlertBase):
             change=change,
             scope_unit=scope_unit,
             scope_count=scope_count,
-            headers=headers
         )
 
         scheduled_query_id = query_response.get('scheduled_query', {}).get('id')
@@ -520,9 +556,8 @@ class AnomalyAlert(SpecialAlertBase):
             account_id=self.account_id
         )
 
-        tag_response = self.session.post(
+        tag_response = self._api_post(
             url=tag_url,
-            headers=headers,
             data=json.dumps(tag_data, sort_keys=True),
         )
 
@@ -534,3 +569,49 @@ class AnomalyAlert(SpecialAlertBase):
                 ))
 
         return tag_response.json()
+
+    def delete(self, tag_id, scheduled_query_id):
+        """
+        Delete a specified anomaly alert tag and its scheduled query
+
+        :param tag_id: The tag ID to delete
+        :type tag_id: str
+
+        :param scheduled_query_id: The scheduled query id to delete
+        :type scheduled_query_id: str
+
+        :raises: This will raise a
+            :class:`ServerException <logentries_api.exceptions.ServerException>`
+            if there is an error from Logentries
+        """
+
+        tag_url = 'https://logentries.com/rest/{account_id}/api/tags/{tag_id}'
+
+        response = self._api_delete(
+            url=tag_url.format(
+                account_id=self.account_id,
+                tag_id=tag_id
+            )
+        )
+        if not response.ok:
+            raise ServerException(
+                '{0}: {1}'.format(
+                    response.status_code,
+                    response.text or response.reason
+                ))
+
+        query_url = 'https://logentries.com/rest/{account_id}/api/scheduled_queries/{query_id}'
+
+        response = self._api_delete(
+            url=query_url.format(
+                account_id=self.account_id,
+                query_id=scheduled_query_id
+            )
+        )
+
+        if not response.ok:
+            raise ServerException(
+                '{0}: {1}'.format(
+                    response.status_code,
+                    response.text or response.reason
+                ))

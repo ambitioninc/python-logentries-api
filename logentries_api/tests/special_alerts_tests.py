@@ -258,6 +258,42 @@ class SpecialAlertBaseTests(TestCase):
             data={'k': 'v'}
         )
 
+        mock_post.return_value.json.assert_called_once_with()
+
+        mock_post.assert_called_once_with(
+            alert.session,
+            url=url,
+            headers={},
+            data={'k': 'v'}
+        )
+
+    @patch.object(SpecialAlertBase, '_get_api_headers')
+    @patch.object(requests.Session, 'post', autospec=True)
+    @patch.object(SpecialAlertBase, '_login')
+    def test_api_post_fail(self, mock_login, mock_post, mock_headers):
+        """
+        Test ._api_post() raises an exception
+        """
+        mock_login.return_value = self.account_id
+        mock_headers.return_value = {}
+
+        mock_response = Mock(spec=requests.Response)
+        mock_response.status_code = 500
+        mock_response.text = "Server error"
+        mock_response.ok = False
+
+        mock_post.return_value = mock_response
+
+        url = 'https://logentries.com/app/{account_id}/rest/tag'.format(account_id=self.account_id)
+
+        alert = SpecialAlertBase(self.username, self.password)
+
+        with self.assertRaises(ServerException):
+            alert._api_post(
+                url=url,
+                data={'k': 'v'}
+            )
+
         mock_post.assert_called_once_with(
             alert.session,
             url=url,
@@ -285,6 +321,100 @@ class SpecialAlertBaseTests(TestCase):
         )
 
         mock_delete.assert_called_once_with(
+            alert.session,
+            url=url,
+            headers={},
+            data={'k': 'v'}
+        )
+
+    @patch.object(SpecialAlertBase, '_get_api_headers')
+    @patch.object(requests.Session, 'delete', autospec=True)
+    @patch.object(SpecialAlertBase, '_login')
+    def test_api_delete_fail(self, mock_login, mock_delete, mock_headers):
+        """
+        Test ._api_delete() raises an exception
+        """
+        mock_login.return_value = self.account_id
+        mock_headers.return_value = {}
+
+        mock_response = Mock(spec=requests.Response)
+        mock_response.status_code = 500
+        mock_response.text = "Server error"
+        mock_response.ok = False
+
+        mock_delete.return_value = mock_response
+
+        url = 'https://logentries.com/app/{account_id}/rest/tag'.format(account_id=self.account_id)
+
+        alert = SpecialAlertBase(self.username, self.password)
+
+        with self.assertRaises(ServerException):
+            alert._api_delete(
+                url=url,
+                data={'k': 'v'}
+            )
+
+        mock_delete.assert_called_once_with(
+            alert.session,
+            url=url,
+            headers={},
+            data={'k': 'v'}
+        )
+
+    @patch.object(SpecialAlertBase, '_get_api_headers')
+    @patch.object(requests.Session, 'get', autospec=True)
+    @patch.object(SpecialAlertBase, '_login')
+    def test_api_get(self, mock_login, mock_get, mock_headers):
+        """
+        Test ._api_get()
+        """
+        mock_login.return_value = self.account_id
+        mock_headers.return_value = {}
+
+        url = 'https://logentries.com/app/{account_id}/rest/tag'.format(account_id=self.account_id)
+
+        alert = SpecialAlertBase(self.username, self.password)
+
+        alert._api_get(
+            url=url,
+            data={'k': 'v'}
+        )
+
+        mock_get.assert_called_once_with(
+            alert.session,
+            url=url,
+            headers={},
+            data={'k': 'v'}
+        )
+
+    @patch.object(SpecialAlertBase, '_get_api_headers')
+    @patch.object(requests.Session, 'get', autospec=True)
+    @patch.object(SpecialAlertBase, '_login')
+    def test_api_get_fail(self, mock_login, mock_get, mock_headers):
+        """
+        Test ._api_get() raises an exception
+        """
+        mock_login.return_value = self.account_id
+        mock_headers.return_value = {}
+
+        mock_response = Mock(spec=requests.Response)
+        mock_response.status_code = 500
+        mock_response.text = "Server error"
+        mock_response.ok = False
+
+        mock_get.return_value = mock_response
+
+        url = 'https://logentries.com/app/{account_id}/rest/tag'.format(account_id=self.account_id)
+
+        alert = SpecialAlertBase(self.username, self.password)
+
+        with self.assertRaises(ServerException):
+            alert._api_get(
+                url=url,
+                data={'k': 'v'}
+            )
+
+        mock_get.assert_called_once_with(
             alert.session,
             url=url,
             headers={},
@@ -405,6 +535,94 @@ class SpecialAlertBaseTests(TestCase):
             self.account_id
         )
 
+    @patch.object(SpecialAlertBase, '_api_get')
+    @patch.object(SpecialAlertBase, '_login')
+    def test_list_scheduled_queries_passes(self, mock_login, mock_get):
+        """
+        Test .list_scheduled_queries() passes
+        """
+        mock_login.return_value = self.account_id
+
+        mock_get.return_value = {
+            'scheduled_searches': [
+                {'id': 'f1472b67-0a32-448a-9593-e7c4e90c261f'}
+            ]
+        }
+
+        alert = InactivityAlert(self.username, self.password)
+
+        response = alert.list_scheduled_queries()
+
+        self.assertEqual(
+            response,
+            [
+                {'id': 'f1472b67-0a32-448a-9593-e7c4e90c261f'}
+            ]
+        )
+
+        mock_get.assert_called_once_with(
+            url='https://logentries.com/rest/{account_id}/api/scheduled_queries/'.format(
+                account_id=self.account_id,
+            )
+        )
+
+    @patch.object(SpecialAlertBase, '_api_get')
+    @patch.object(SpecialAlertBase, '_login')
+    def test_list_tags_passes(self, mock_login, mock_get):
+        """
+        Test .list_tags() passes
+        """
+        mock_login.return_value = self.account_id
+
+        mock_get.return_value = {
+            'tags': [
+                {'id': 'f1472b67-0a32-448a-9593-e7c4e90c261f'}
+            ]
+        }
+
+        alert = InactivityAlert(self.username, self.password)
+
+        response = alert.list_tags()
+
+        self.assertEqual(
+            response,
+            [
+                {'id': 'f1472b67-0a32-448a-9593-e7c4e90c261f'}
+            ]
+        )
+
+        mock_get.assert_called_once_with(
+            url='https://logentries.com/rest/{account_id}/api/tags/'.format(
+                account_id=self.account_id,
+            )
+        )
+
+    @patch.object(SpecialAlertBase, 'list_tags')
+    @patch.object(SpecialAlertBase, '_login')
+    def test_get(self, mock_login, mock_list):
+        """
+        Test .get() passes
+        """
+        mock_login.return_value = self.account_id
+
+        mock_list.return_value = [
+            {'id': 'f1472b67-0a32-448a-9593-e7c4e90c261f'},
+            {'id': '5d8ee40d-5998-438c-ad26-a9346fc1463e'}
+        ]
+
+        alert = InactivityAlert(self.username, self.password)
+
+        # call .get()
+        response = alert.get('f1472b67-0a32-448a-9593-e7c4e90c261f')
+
+        self.assertEqual(
+            response,
+            [
+                {'id': 'f1472b67-0a32-448a-9593-e7c4e90c261f'}
+            ]
+        )
+        mock_list.assert_called_once_with()
+
 
 class InactivityAlertTests(TestCase):
     """
@@ -416,101 +634,6 @@ class InactivityAlertTests(TestCase):
         self.password = 'password'
 
         self.account_id = '30c586e0'
-
-    @patch.object(requests.Session, 'post', autospec=True)
-    @patch.object(SpecialAlertBase, '_login')
-    def test_create_fail(self, mock_login, mock_post):
-        """
-        Test .create() has a failure
-        """
-        # simulate login
-        mock_login.return_value = self.account_id
-
-        # Create the response
-        mock_response = Mock(spec=requests.Response)
-        mock_response.status_code = 500
-        mock_response.text = "Bad Input"
-        mock_response.ok = False
-
-        mock_post.return_value = mock_response
-
-        session = requests.session()
-
-        alert = InactivityAlert(self.username, self.password, session)
-
-        name = 'No Successful Web Activity'
-        patterns = ['status=200']
-        logs = [
-            '5d481b23-9c4d-4250-bfe8-be389a227f0b',
-            'e0b6b2c0-a4b8-44c4-b57c-25a7f161faf1'
-        ]
-        trigger_config = AlertTriggerConfig(
-            timeframe_value=6,
-            timeframe_period='day',
-        )
-        slack_url = 'https://hooks.slack.com/services'
-        alert_config = SlackAlertConfig(slack_url)
-
-        alert_reports = [
-            AlertReportConfig(
-                report_count=4,
-                report_period='day',
-                alert_config=alert_config,
-            )
-        ]
-        with self.assertRaises(ServerException):
-            alert.create(
-                name=name,
-                patterns=patterns,
-                logs=logs,
-                trigger_config=trigger_config,
-                alert_reports=alert_reports
-            )
-
-        headers = alert.default_headers.copy()
-        headers.update({
-            'Content-Type': 'application/json;charset=utf-8',
-            'Accept': 'application/json, text/plain, */*',
-            'Referer': 'https://logentries.com/app/{account_id}'.format(account_id=alert.account_id),
-            'X-CSRFToken': alert._get_csrf_token(),
-        })
-
-        data = {
-            'tag': {
-                'actions': [
-                    {
-                        'enabled': True,
-                        'min_report_count': 4,
-                        'min_report_period': 'Day',
-                        'targets': [{
-                            'type': 'slack',
-                            'params_set': {
-                                'url': slack_url
-                            }
-                        }],
-                        'type': 'Alert',
-                    },
-                ],
-                'name': name,
-                'patterns': patterns,
-                'sources': [
-                    {'id': '5d481b23-9c4d-4250-bfe8-be389a227f0b'},
-                    {'id': 'e0b6b2c0-a4b8-44c4-b57c-25a7f161faf1'},
-                ],
-                'sub_type': 'InactivityAlert',
-                'type': 'AlertNotify',
-                'timeframe_period': 'Day',
-                'timeframe_value': 6
-
-            }
-        }
-
-        mock_post.assert_called_once_with(
-            session,
-            url=alert.url_template.format(account_id=alert.account_id),
-            headers=headers,
-            data=json.dumps(data, sort_keys=True)
-        )
 
     @patch.object(requests.Session, 'post', autospec=True)
     @patch.object(SpecialAlertBase, '_login')
@@ -611,38 +734,11 @@ class InactivityAlertTests(TestCase):
 
         mock_response.json.assert_called_once_with()
 
-    @patch.object(InactivityAlert, '_api_delete')
-    @patch.object(InactivityAlert, '_login')
-    def test_delete_fails(self, mock_login, mock_delete):
-        """
-        Test .delete() has a failure
-        """
-        mock_login.return_value = self.account_id
-
-        mock_response = Mock(spec=requests.Response)
-        mock_response.status_code = 500
-        mock_response.text = "Bad Input"
-        mock_response.ok = False
-
-        mock_delete.return_value = mock_response
-
-        alert = InactivityAlert(self.username, self.password)
-
-        with self.assertRaises(ServerException):
-            alert.delete('19dede15-118b-467f-bfe9-e9c771d7cc2c')
-
-        mock_delete.assert_called_once_with(
-            url='https://logentries.com/rest/{account_id}/api/tags/{tag}'.format(
-                account_id=self.account_id,
-                tag='19dede15-118b-467f-bfe9-e9c771d7cc2c'
-            )
-        )
-
     @patch.object(SpecialAlertBase, '_api_delete')
     @patch.object(SpecialAlertBase, '_login')
     def test_delete_passes(self, mock_login, mock_delete):
         """
-        Test .delete() has a failure
+        Test .delete() passes
         """
         mock_login.return_value = self.account_id
 
@@ -673,41 +769,6 @@ class AnomalyAlertTests(TestCase):
         self.username = 'you@example.com'
         self.password = 'password'
         self.account_id = '30c586e0'
-
-    @patch.object(requests.Session, 'post', autospec=True)
-    @patch.object(SpecialAlertBase, '_login')
-    def test_create_scheduled_query_fail(self, mock_login, mock_post):
-        """
-        Test ._create_scheduled_query() has a failure
-        """
-        # simulate login
-        mock_login.return_value = self.account_id
-
-        # Create the response
-        mock_response = Mock(spec=requests.Response)
-        mock_response.status_code = 500
-        mock_response.text = "Bad Input"
-        mock_response.ok = False
-
-        mock_post.return_value = mock_response
-
-        session = requests.session()
-
-        alert = AnomalyAlert(self.username, self.password, session)
-
-        query = 'where(status=404) calculate(COUNT)'
-        scope_count = 1
-        scope_unit = 'day'
-        change = '+15'
-
-        # Call .create
-        with self.assertRaises(ServerException):
-            alert._create_scheduled_query(
-                query=query,
-                change=change,
-                scope_count=scope_count,
-                scope_unit=scope_unit,
-            )
 
     @patch.object(requests.Session, 'post', autospec=True)
     @patch.object(SpecialAlertBase, '_login')
@@ -755,69 +816,6 @@ class AnomalyAlertTests(TestCase):
                 }
             }
         )
-
-    @patch.object(requests.Session, 'post', autospec=True)
-    @patch.object(AnomalyAlert, '_create_scheduled_query')
-    @patch.object(SpecialAlertBase, '_login')
-    def test_create_fail_post(self, mock_login, mock_scheduled_query, mock_post):
-        """
-        Test .create() has a failure
-        """
-        # simulate login
-        mock_login.return_value = self.account_id
-
-        mock_scheduled_query.return_value = {
-            'scheduled_query': {
-                'id': '00000000-0000-03a2-0000-000000000000'
-            }
-        }
-
-        # Create the response
-        mock_response = Mock(spec=requests.Response)
-        mock_response.status_code = 500
-        mock_response.text = "Bad Input"
-        mock_response.ok = False
-
-        mock_post.return_value = mock_response
-
-        session = requests.session()
-
-        alert = AnomalyAlert(self.username, self.password, session)
-
-        name = 'Too many 404s'
-        query = 'where(status=404) calculate(COUNT)'
-        logs = [
-            '5d481b23-9c4d-4250-bfe8-be389a227f0b',
-        ]
-        trigger_config = AlertTriggerConfig(
-            timeframe_value=7,
-            timeframe_period='day',
-        )
-
-        slack_url = 'https://hooks.slack.com/services'
-        alert_config = SlackAlertConfig(slack_url)
-
-        alert_reports = [
-            AlertReportConfig(
-                report_count=4,
-                report_period='day',
-                alert_config=alert_config,
-            )
-        ]
-
-        # Call .create
-        with self.assertRaises(ServerException):
-            alert.create(
-                name=name,
-                query=query,
-                scope_count=1,
-                scope_unit='day',
-                increase_positive=True,
-                percentage_change=15,
-                trigger_config=trigger_config,
-                logs=logs,
-                alert_reports=alert_reports
-            )
 
     @patch.object(requests.Session, 'post', autospec=True)
     @patch.object(AnomalyAlert, '_create_scheduled_query')
@@ -933,84 +931,12 @@ class AnomalyAlertTests(TestCase):
             scope_count=1,
         )
 
+    @patch.object(SpecialAlertBase, 'list_tags')
     @patch.object(SpecialAlertBase, '_api_delete')
     @patch.object(SpecialAlertBase, '_login')
-    def test_delete_fails_first(self, mock_login, mock_delete):
+    def test_delete_passes(self, mock_login, mock_delete, mock_list_tags):
         """
-        Test .delete() has a failure on first delete
-        """
-        mock_login.return_value = self.account_id
-
-        mock_response = Mock(spec=requests.Response)
-        mock_response.status_code = 500
-        mock_response.text = "Bad Input"
-        mock_response.ok = False
-
-        mock_delete.return_value = mock_response
-
-        alert = AnomalyAlert(self.username, self.password)
-
-        with self.assertRaises(ServerException):
-            alert.delete(
-                '19dede15-118b-467f-bfe9-e9c771d7cc2c',
-                '00000000-0000-469c-0000-000000000000'
-            )
-
-        mock_delete.assert_called_once_with(
-            url='https://logentries.com/rest/{account_id}/api/tags/{tag}'.format(
-                account_id=self.account_id,
-                tag='19dede15-118b-467f-bfe9-e9c771d7cc2c'
-            )
-        )
-
-    @patch.object(SpecialAlertBase, '_api_delete')
-    @patch.object(SpecialAlertBase, '_login')
-    def test_delete_fails_second(self, mock_login, mock_delete):
-        """
-        Test .delete() has a failure on second delete
-        """
-        mock_login.return_value = self.account_id
-
-        mock_response = Mock(spec=requests.Response)
-        mock_response.status_code = 500
-        mock_response.text = "Bad Input"
-        mock_response.ok = False
-
-        mock_delete.side_effect = iter([
-            Mock(ok=True),
-            mock_response
-        ])
-
-        alert = AnomalyAlert(self.username, self.password)
-
-        with self.assertRaises(ServerException):
-            alert.delete(
-                '19dede15-118b-467f-bfe9-e9c771d7cc2c',
-                '00000000-0000-469c-0000-000000000000'
-            )
-
-        mock_delete.assert_has_calls(
-            [
-                call(
-                    url='https://logentries.com/rest/{account_id}/api/tags/{tag}'.format(
-                        account_id=self.account_id,
-                        tag='19dede15-118b-467f-bfe9-e9c771d7cc2c'
-                    )
-                ),
-                call(
-                    url='https://logentries.com/rest/{account_id}/api/scheduled_queries/{query_id}'.format(
-                        account_id=self.account_id,
-                        query_id='00000000-0000-469c-0000-000000000000'
-                    )
-                ),
-            ]
-        )
-
-    @patch.object(SpecialAlertBase, '_api_delete')
-    @patch.object(SpecialAlertBase, '_login')
-    def test_delete_passes(self, mock_login, mock_delete):
-        """
-        Test .delete() has a failure
+        Test .delete() works
         """
         mock_login.return_value = self.account_id
 
@@ -1020,12 +946,16 @@ class AnomalyAlertTests(TestCase):
 
         mock_delete.return_value = mock_response
 
+        mock_list_tags.return_value = [
+            {
+                'id': '19dede15-118b-467f-bfe9-e9c771d7cc2c',
+                'scheduled_query_id': '00000000-0000-469c-0000-000000000000'
+            }
+        ]
+
         alert = AnomalyAlert(self.username, self.password)
 
-        alert.delete(
-            '19dede15-118b-467f-bfe9-e9c771d7cc2c',
-            '00000000-0000-469c-0000-000000000000'
-        )
+        alert.delete('19dede15-118b-467f-bfe9-e9c771d7cc2c')
         mock_delete.assert_has_calls(
             [
                 call(
@@ -1042,3 +972,31 @@ class AnomalyAlertTests(TestCase):
                 ),
             ]
         )
+
+    @patch.object(SpecialAlertBase, 'list_tags')
+    @patch.object(SpecialAlertBase, '_api_delete')
+    @patch.object(SpecialAlertBase, '_login')
+    def test_delete_doesnt_exist(self, mock_login, mock_delete, mock_list_tags):
+        """
+        Test .delete() where key doesn't exist
+        """
+        mock_login.return_value = self.account_id
+
+        mock_response = Mock(spec=requests.Response)
+        mock_response.status_code = 200
+        mock_response.ok = True
+
+        mock_delete.return_value = mock_response
+
+        mock_list_tags.return_value = [
+            {
+                'id': 'not-a-match',
+                'scheduled_query_id': '00000000-0000-469c-0000-000000000000'
+            }
+        ]
+
+        alert = AnomalyAlert(self.username, self.password)
+
+        alert.delete('19dede15-118b-467f-bfe9-e9c771d7cc2c')
+
+        self.assertFalse(mock_delete.called)

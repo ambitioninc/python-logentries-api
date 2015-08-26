@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v0.7
+----
+
+* Removed length restriction on special alert names
+* Added ``.get()``, ``.list_tags()``, and ``.list_scheduled_queries()`` methods for special alerts
+* Changed signature on ``AnomalyAlert().delete()`` to only require the tag_id
+
 v0.6
 ----
 

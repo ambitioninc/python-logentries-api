@@ -24,6 +24,7 @@ InactivityAlert
 ---------------
 .. autoclass:: logentries_api.special_alerts.InactivityAlert
     :members:
+    :inherited-members:
 
     .. automethod:: __init__
 
@@ -31,5 +32,6 @@ AnomalyAlert
 ------------
 .. autoclass:: logentries_api.special_alerts.AnomalyAlert
     :members:
+    :inherited-members:
 
     .. automethod:: __init__

@@ -275,21 +275,52 @@ class SpecialAlertBase(object):
         """
         Convenience method for posting
         """
-        return self.session.post(
+        response = self.session.post(
             url=url,
             headers=self._get_api_headers(),
             **kwargs
         )
+        if not response.ok:
+            raise ServerException(
+                '{0}: {1}'.format(
+                    response.status_code,
+                    response.text or response.reason
+                ))
+        return response.json()
 
     def _api_delete(self, url, **kwargs):
         """
         Convenience method for deleting
         """
-        return self.session.delete(
+        response = self.session.delete(
             url=url,
             headers=self._get_api_headers(),
             **kwargs
         )
+        if not response.ok:
+            raise ServerException(
+                '{0}: {1}'.format(
+                    response.status_code,
+                    response.text or response.reason
+                ))
+        return response
+
+    def _api_get(self, url, **kwargs):
+        """
+        Convenience method for getting
+        """
+        response = self.session.get(
+            url=url,
+            headers=self._get_api_headers(),
+            **kwargs
+        )
+        if not response.ok:
+            raise ServerException(
+                '{0}: {1}'.format(
+                    response.status_code,
+                    response.text or response.reason
+                ))
+        return response.json()
 
     def _login(self, username, password):
         """
@@ -329,6 +360,63 @@ class SpecialAlertBase(object):
 
         app_response = self.session.get('https://logentries.com/app/', headers=self.default_headers)
         return app_response.url.split('/')[-1]
+
+    def list_scheduled_queries(self):
+        """
+        List all scheduled_queries
+
+        :return: A list of all scheduled query dicts
+        :rtype: list of dict
+
+        :raises: This will raise a
+            :class:`ServerException<logentries_api.exceptions.ServerException>`
+            if there is an error from Logentries
+        """
+        url = 'https://logentries.com/rest/{account_id}/api/scheduled_queries/'.format(
+            account_id=self.account_id)
+        return self._api_get(url=url).get('scheduled_searches')
+
+    def list_tags(self):
+        """
+        List all tags for the account.
+
+        The response differs from ``Hooks().list()``, in that tag dicts for
+        anomaly alerts include a 'scheduled_query_id' key with the value being
+        the UUID for the associated scheduled query
+
+        :return: A list of all tag dicts
+        :rtype: list of dict
+
+        :raises: This will raise a
+            :class:`ServerException<logentries_api.exceptions.ServerException>`
+            if there is an error from Logentries
+        """
+        url = 'https://logentries.com/rest/{account_id}/api/tags/'.format(
+            account_id=self.account_id)
+        return self._api_get(url=url).get('tags')
+
+    def get(self, name_or_id):
+        """
+        Get alert by name or id
+
+        :param name_or_id: The alert's name or id
+        :type name_or_id: str
+
+        :return: A list of matching tags. An empty list is returned if there are
+            not any matches
+        :rtype: list of dict
+
+        :raises: This will raise a
+            :class:`ServerException<logentries_api.exceptions.ServerException>`
+            if there is an error from Logentries
+        """
+        return [
+            tag
+            for tag
+            in self.list_tags()
+            if name_or_id == tag.get('id')
+            or name_or_id == tag.get('name')
+        ]
 
 
 class InactivityAlert(SpecialAlertBase):
@@ -373,7 +461,7 @@ class InactivityAlert(SpecialAlertBase):
                     for alert_report
                     in alert_reports
                 ],
-                'name': name[:30],
+                'name': name,
                 'patterns': patterns,
                 'sources': [
                     {'id': log}
@@ -386,15 +474,10 @@ class InactivityAlert(SpecialAlertBase):
         }
         data['tag'].update(trigger_config.to_dict())
 
-        response = self._api_post(
+        return self._api_post(
             url=self.url_template.format(account_id=self.account_id),
             data=json.dumps(data, sort_keys=True)
         )
-
-        if not response.ok:
-            raise ServerException(
-                '{0}: {1}'.format(response.status_code, response.text or response.reason))
-        return response.json()
 
     def delete(self, tag_id):
         """
@@ -409,18 +492,12 @@ class InactivityAlert(SpecialAlertBase):
         """
         tag_url = 'https://logentries.com/rest/{account_id}/api/tags/{tag_id}'
 
-        response = self._api_delete(
+        self._api_delete(
             url=tag_url.format(
                 account_id=self.account_id,
                 tag_id=tag_id
             )
         )
-        if not response.ok:
-            raise ServerException(
-                '{0}: {1}'.format(
-                    response.status_code,
-                    response.text or response.reason
-                ))
 
 
 class AnomalyAlert(SpecialAlertBase):
@@ -445,17 +522,10 @@ class AnomalyAlert(SpecialAlertBase):
 
         query_url = 'https://logentries.com/rest/{account_id}/api/scheduled_queries'
 
-        query_response = self._api_post(
+        return self._api_post(
             url=query_url.format(account_id=self.account_id),
             data=json.dumps(query_data, sort_keys=True)
         )
-
-        if not query_response.ok:
-            raise ServerException(
-                '{0}: {1}'.format(
-                    query_response.status_code,
-                    query_response.text or query_response.reason))
-        return query_response.json()
 
     def create(self,
                name,
@@ -516,12 +586,10 @@ class AnomalyAlert(SpecialAlertBase):
         .. _Leql: https://blog.logentries.com/2015/06/introducing-leql/
 
         """
-
-        change = str(percentage_change)
-        if increase_positive:
-            change = '+' + change
-        else:
-            change = '-' + change
+        change = '{pos}{change}'.format(
+            pos='+' if increase_positive else '-',
+            change=str(percentage_change)
+        )
 
         query_response = self._create_scheduled_query(
             query=query,
@@ -539,7 +607,7 @@ class AnomalyAlert(SpecialAlertBase):
                     for alert_report
                     in alert_reports
                 ],
-                'name': name[:30],
+                'name': name,
                 'scheduled_query_id': scheduled_query_id,
                 'sources': [
                     {'id': log}
@@ -556,62 +624,48 @@ class AnomalyAlert(SpecialAlertBase):
             account_id=self.account_id
         )
 
-        tag_response = self._api_post(
+        return self._api_post(
             url=tag_url,
             data=json.dumps(tag_data, sort_keys=True),
         )
 
-        if not tag_response.ok:
-            raise ServerException(
-                '{0}: {1}'.format(
-                    tag_response.status_code,
-                    tag_response.text or tag_response.reason
-                ))
-
-        return tag_response.json()
-
-    def delete(self, tag_id, scheduled_query_id):
+    def delete(self, tag_id):
         """
         Delete a specified anomaly alert tag and its scheduled query
 
+        This method makes 3 requests:
+
+            * One to get the associated scheduled_query_id
+            * One to delete the alert
+            * One to delete get scheduled query
+
         :param tag_id: The tag ID to delete
         :type tag_id: str
-
-        :param scheduled_query_id: The scheduled query id to delete
-        :type scheduled_query_id: str
 
         :raises: This will raise a
             :class:`ServerException <logentries_api.exceptions.ServerException>`
             if there is an error from Logentries
         """
+        this_alert = [tag for tag in self.list_tags() if tag.get('id') == tag_id]
+
+        if len(this_alert) < 1:
+            return
+
+        query_id = this_alert[0].get('scheduled_query_id')
 
         tag_url = 'https://logentries.com/rest/{account_id}/api/tags/{tag_id}'
 
-        response = self._api_delete(
+        self._api_delete(
             url=tag_url.format(
                 account_id=self.account_id,
                 tag_id=tag_id
             )
         )
-        if not response.ok:
-            raise ServerException(
-                '{0}: {1}'.format(
-                    response.status_code,
-                    response.text or response.reason
-                ))
-
         query_url = 'https://logentries.com/rest/{account_id}/api/scheduled_queries/{query_id}'
 
-        response = self._api_delete(
+        self._api_delete(
             url=query_url.format(
                 account_id=self.account_id,
-                query_id=scheduled_query_id
+                query_id=query_id
             )
         )
-
-        if not response.ok:
-            raise ServerException(
-                '{0}: {1}'.format(
-                    response.status_code,
-                    response.text or response.reason
-                ))
